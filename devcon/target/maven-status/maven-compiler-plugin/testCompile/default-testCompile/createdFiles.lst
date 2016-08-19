@@ -1,0 +1,12 @@
+com\devonfw\devcon\module\DistTest.class
+com\devonfw\devcon\mocks\MockCommandManager.class
+com\devonfw\devcon\basic\HelpTest.class
+com\devonfw\devcon\module\ProjectTest.class
+com\devonfw\devcon\basic\BasicTest.class
+com\devonfw\devcon\module\HelpTest.class
+com\devonfw\devcon\basic\RegistryTest.class
+com\devonfw\devcon\basic\PairTest.class
+com\devonfw\devcon\module\SenchaTest.class
+com\devonfw\devcon\module\Oasp4jsTest.class
+com\devonfw\devcon\module\FooTest.class
+com\devonfw\devcon\basic\ContextPathInfoTest.class

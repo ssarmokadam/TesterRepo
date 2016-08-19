@@ -1,0 +1,8 @@
+.scene {
+    height: 200px;
+    width: 50%;
+    background-color: WHITE;
+}
+.primaryStage{
+	background-color: WHITE;
+}
