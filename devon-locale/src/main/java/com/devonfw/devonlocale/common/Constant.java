@@ -57,4 +57,8 @@ public class Constant {
    */
   public static final String EXTJS = "extjs";
 
+  /**
+   * New line character
+   */
+  public static final String NEW_LINE_CHAR = "\n";
 }

@@ -26,7 +26,7 @@ public class TargetAdapterFactory extends AbstractTargetAdapterFactory {
   public TranslationTarget getTranslationTarget(String outputFormat) {
 
     TranslationTarget target = null;
-    switch (outputFormat) {
+    switch (outputFormat.toLowerCase()) {
     case Constant.EXTJS:
       target = new ExtJsTargetAdapter();
       break;

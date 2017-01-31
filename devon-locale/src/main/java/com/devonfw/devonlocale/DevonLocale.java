@@ -62,7 +62,7 @@ public class DevonLocale {
 
         } else {
           // parse commandline
-          InputStream stream = new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8));
+          InputStream stream = new ByteArrayInputStream(input.getBytes(StandardCharsets.ISO_8859_1));
           propertyTreeMap = locale.translationSource.parseStream(stream);
         }
 
@@ -94,9 +94,25 @@ public class DevonLocale {
 
   private void generateOutput(String outputFormat, CommandLine cmd, Map<String, Node> propertyTreeMap) {
 
-    switch (outputFormat) {
+    switch (outputFormat.toLowerCase()) {
 
     case Constant.ANGULAR:
+      if (cmd.hasOption(Constant.OUTPUT)) {
+        String outputFile = cmd.getOptionValue(Constant.OUTPUT);
+        if (!new File(outputFile).exists()) {
+          File resultFile = new File(outputFile);
+          this.translationTarget.generateFile(propertyTreeMap, resultFile);
+        } else {
+          this.translationTarget.generateFile(propertyTreeMap, new File(outputFile));
+        }
+
+      } else {
+
+        this.translationTarget.generateStream(propertyTreeMap, System.out);
+      }
+      break;
+
+    case Constant.EXTJS:
       if (cmd.hasOption(Constant.OUTPUT)) {
         String outputFile = cmd.getOptionValue(Constant.OUTPUT);
         if (!new File(outputFile).exists()) {
@@ -112,11 +128,6 @@ public class DevonLocale {
       }
       break;
 
-    // case Constant.EXTJS:
-
-    default:
-      generateExtJsFile(outputFormat, cmd, propertyTreeMap);
-      break;
     }
   }
 

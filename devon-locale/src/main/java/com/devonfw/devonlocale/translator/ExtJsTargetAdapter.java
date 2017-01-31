@@ -18,15 +18,15 @@ import com.devonfw.devonlocale.common.Node;
  */
 public class ExtJsTargetAdapter implements TranslationTarget {
 
-  private StringBuffer prefix = new StringBuffer(Constant.PREFIX_EXTJS);
+  private StringBuilder prefix = new StringBuilder(Constant.PREFIX_EXTJS);
 
-  private StringBuffer postfix = new StringBuffer(Constant.POSTFIX_EXTJS);
+  private StringBuilder postfix = new StringBuilder(Constant.POSTFIX_EXTJS);
 
-  private StringBuffer startJsStringBuffer = new StringBuffer();
+  private StringBuilder startJsStringBuilder = new StringBuilder();
 
-  private StringBuffer endJsStringBuffer = new StringBuffer();
+  private StringBuilder endJsStringBuilder = new StringBuilder();
 
-  private StringBuffer completeJsString = new StringBuffer();
+  private StringBuilder completeJsString = new StringBuilder();
 
   /**
    * {@inheritDoc}
@@ -64,7 +64,7 @@ public class ExtJsTargetAdapter implements TranslationTarget {
    * @param root
    * @return
    */
-  public StringBuffer createJsString(Map<String, Node> root) {
+  public StringBuilder createJsString(Map<String, Node> root) {
 
     Node node;
 
@@ -72,23 +72,44 @@ public class ExtJsTargetAdapter implements TranslationTarget {
     Set<String> keySet = root.keySet();
     for (String key : keySet) {
       node = root.get(key);
-      if (node.getText() == null && node.getChildren().size() == 1) {
+      if (node.getText() == null && node.getChildren().size() > 1) {
         childMap = node.getChildren();
-        this.startJsStringBuffer.append(key + ": {");
-        this.endJsStringBuffer.append("}");
+        Set<String> siblingNodeSet = childMap.keySet();
+        this.startJsStringBuilder.append(key + ": {").append(Constant.NEW_LINE_CHAR);
+        this.endJsStringBuilder.append("}");
+        int i = 0;
+        for (String siblingName : siblingNodeSet) {
+
+          if (i != 0) {
+            this.startJsStringBuilder.append(",");
+          }
+          this.startJsStringBuilder.append(siblingName + ":\'" + childMap.get(siblingName).getText() + "\'");
+          i++;
+        }
+
+        if (this.completeJsString.toString().isEmpty()) {
+          this.completeJsString.append("{").append(this.startJsStringBuilder).append(this.endJsStringBuilder);
+        } else {
+          this.completeJsString.append(",").append(Constant.NEW_LINE_CHAR).append(this.startJsStringBuilder)
+              .append(this.endJsStringBuilder);
+        }
+        this.startJsStringBuilder = new StringBuilder();
+        this.endJsStringBuilder = new StringBuilder();
+      } else if (node.getText() == null && node.getChildren().size() == 1) {
+        childMap = node.getChildren();
+        this.startJsStringBuilder.append(key + ": {").append(Constant.NEW_LINE_CHAR);
+        this.endJsStringBuilder.append("}");
         createJsString(childMap);
       } else if (node.getText() != null) {
-        this.startJsStringBuffer.append(key + " : " + "\'" + node.getText() + "\'");
+        this.startJsStringBuilder.append(key + " : " + "\'" + node.getText() + "\'");
         if (this.completeJsString.toString().isEmpty()) {
-          this.completeJsString.append(this.startJsStringBuffer).append(this.endJsStringBuffer);
+          this.completeJsString.append(this.startJsStringBuilder).append(this.endJsStringBuilder);
         } else {
-          this.completeJsString.append(",").append(this.startJsStringBuffer).append(this.endJsStringBuffer);
+          this.completeJsString.append(",").append(Constant.NEW_LINE_CHAR).append(this.startJsStringBuilder)
+              .append(this.endJsStringBuilder);
         }
-        this.startJsStringBuffer = new StringBuffer();
-        this.endJsStringBuffer = new StringBuffer();
-      } else {
-        System.out.println("ERROR:: This version of devon-locale supports only simple proprties. " + key
-            + " This property will be ignored.");
+        this.startJsStringBuilder = new StringBuilder();
+        this.endJsStringBuilder = new StringBuilder();
       }
 
     }

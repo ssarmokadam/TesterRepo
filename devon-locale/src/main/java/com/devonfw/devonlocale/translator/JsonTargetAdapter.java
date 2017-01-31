@@ -8,6 +8,7 @@ import java.io.OutputStream;
 import java.util.Map;
 import java.util.Set;
 
+import com.devonfw.devonlocale.common.Constant;
 import com.devonfw.devonlocale.common.Node;
 
 /**
@@ -43,6 +44,13 @@ public class JsonTargetAdapter implements TranslationTarget {
       }
       FileWriter fw = new FileWriter(out.getAbsoluteFile());
       BufferedWriter bw = new BufferedWriter(fw);
+      // StringBuilder finalJsonString = createJsonString(root).append("}");
+      // String[] formatOutput = finalJsonString.toString().split(",");
+      // for (String outputString : formatOutput) {
+      // bw.write(outputString);
+      // bw.write(",");
+      // bw.newLine();
+      // }
       bw.write(createJsonString(root).append("}").toString());
       bw.close();
     } catch (IOException e) {
@@ -66,9 +74,32 @@ public class JsonTargetAdapter implements TranslationTarget {
     Set<String> keySet = root.keySet();
     for (String key : keySet) {
       node = root.get(key);
-      if (node.getText() == null && node.getChildren().size() == 1) {
+      if (node.getText() == null && node.getChildren().size() > 1) {
         childMap = node.getChildren();
-        this.startJsonStringBuilder.append("\"" + key + "\": {");
+        Set<String> siblingNodeSet = childMap.keySet();
+        this.startJsonStringBuilder.append("\"" + key + "\": {").append(Constant.NEW_LINE_CHAR);
+        this.endJsonStringBuilder.append("}");
+        int i = 0;
+        for (String siblingName : siblingNodeSet) {
+          if (i != 0) {
+            this.startJsonStringBuilder.append(",");
+          }
+          this.startJsonStringBuilder
+              .append("\"" + siblingName + "\" : " + "\"" + childMap.get(siblingName).getText() + "\"");
+          i++;
+        }
+
+        if (this.completeJsonString.toString().isEmpty()) {
+          this.completeJsonString.append("{").append(this.startJsonStringBuilder).append(this.endJsonStringBuilder);
+        } else {
+          this.completeJsonString.append(",").append(Constant.NEW_LINE_CHAR).append(this.startJsonStringBuilder)
+              .append(this.endJsonStringBuilder);
+        }
+        this.startJsonStringBuilder = new StringBuilder();
+        this.endJsonStringBuilder = new StringBuilder();
+      } else if (node.getText() == null && node.getChildren().size() == 1) {
+        childMap = node.getChildren();
+        this.startJsonStringBuilder.append("\"" + key + "\": {").append(Constant.NEW_LINE_CHAR);
         this.endJsonStringBuilder.append("}");
         createJsonString(childMap);
       } else if (node.getText() != null) {
@@ -76,14 +107,13 @@ public class JsonTargetAdapter implements TranslationTarget {
         if (this.completeJsonString.toString().isEmpty()) {
           this.completeJsonString.append("{").append(this.startJsonStringBuilder).append(this.endJsonStringBuilder);
         } else {
-          this.completeJsonString.append(",").append(this.startJsonStringBuilder).append(this.endJsonStringBuilder);
+          this.completeJsonString.append(",").append(Constant.NEW_LINE_CHAR).append(this.startJsonStringBuilder)
+              .append(this.endJsonStringBuilder);
         }
 
         this.startJsonStringBuilder = new StringBuilder();
         this.endJsonStringBuilder = new StringBuilder();
 
-      } else {
-        System.out.println("Out of scope hence skipped");
       }
 
     }
