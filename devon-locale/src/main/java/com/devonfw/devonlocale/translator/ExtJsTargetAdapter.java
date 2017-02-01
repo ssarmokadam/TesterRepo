@@ -5,6 +5,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
@@ -27,6 +28,8 @@ public class ExtJsTargetAdapter implements TranslationTarget {
   private StringBuilder endJsStringBuilder = new StringBuilder();
 
   private StringBuilder completeJsString = new StringBuilder();
+
+  private boolean sibling = false;
 
   /**
    * {@inheritDoc}
@@ -66,26 +69,44 @@ public class ExtJsTargetAdapter implements TranslationTarget {
    */
   public StringBuilder createJsString(Map<String, Node> root) {
 
-    Node node;
-
-    Map<String, Node> childMap;
+    Map<String, String> siblingStringMap = new HashMap<>();
+    Node node, siblingNode;
+    Map<String, Node> childMap, newChildMap;
     Set<String> keySet = root.keySet();
     for (String key : keySet) {
       node = root.get(key);
       if (node.getText() == null && node.getChildren().size() > 1) {
+
         childMap = node.getChildren();
         Set<String> siblingNodeSet = childMap.keySet();
         this.startJsStringBuilder.append(key + ": {").append(Constant.NEW_LINE_CHAR);
         this.endJsStringBuilder.append("}");
         int i = 0;
+        int j = 0;
         for (String siblingName : siblingNodeSet) {
-
-          if (i != 0) {
-            this.startJsStringBuilder.append(",");
+          siblingNode = childMap.get(siblingName);
+          if (siblingNode.getText() == null && siblingNode.getChildren().size() == 1) {
+            newChildMap = siblingNode.getChildren();
+            this.startJsStringBuilder.append(siblingName + ": {").append(Constant.NEW_LINE_CHAR);
+            // this.endJsStringBuilder.append("}");
+            this.sibling = true;
+            StringBuilder tempBuilder = createJsString(newChildMap);
+            System.out.println("tempBuilder " + tempBuilder.toString());
+            this.sibling = false;
+            // this.startJsStringBuilder.append(tempBuilder.toString());
+            if (j < siblingNodeSet.size() - 1) {
+              this.startJsStringBuilder.append(",");
+            }
+            j++;
+          } else {
+            if (i != 0) {
+              this.startJsStringBuilder.append(",");
+            }
+            this.startJsStringBuilder.append(siblingName + " : " + "\'" + childMap.get(siblingName).getText() + "\'");
+            i++;
           }
-          this.startJsStringBuilder.append(siblingName + ":\'" + childMap.get(siblingName).getText() + "\'");
-          i++;
-        }
+
+        } // for close
 
         if (this.completeJsString.toString().isEmpty()) {
           this.completeJsString.append("{").append(this.startJsStringBuilder).append(this.endJsStringBuilder);
@@ -95,21 +116,30 @@ public class ExtJsTargetAdapter implements TranslationTarget {
         }
         this.startJsStringBuilder = new StringBuilder();
         this.endJsStringBuilder = new StringBuilder();
+
       } else if (node.getText() == null && node.getChildren().size() == 1) {
         childMap = node.getChildren();
         this.startJsStringBuilder.append(key + ": {").append(Constant.NEW_LINE_CHAR);
         this.endJsStringBuilder.append("}");
         createJsString(childMap);
       } else if (node.getText() != null) {
-        this.startJsStringBuilder.append(key + " : " + "\'" + node.getText() + "\'");
-        if (this.completeJsString.toString().isEmpty()) {
-          this.completeJsString.append(this.startJsStringBuilder).append(this.endJsStringBuilder);
+
+        if (this.sibling) {
+          this.startJsStringBuilder.append(key + " : " + "\'" + node.getText() + "\'");
         } else {
-          this.completeJsString.append(",").append(Constant.NEW_LINE_CHAR).append(this.startJsStringBuilder)
-              .append(this.endJsStringBuilder);
+          this.startJsStringBuilder.append(key + " : " + "\'" + node.getText() + "\'");
+          if (this.completeJsString.toString().isEmpty()) {
+            this.completeJsString.append("{").append(this.startJsStringBuilder).append(this.endJsStringBuilder);
+          } else {
+            this.completeJsString.append(",").append(Constant.NEW_LINE_CHAR).append(this.startJsStringBuilder)
+                .append(this.endJsStringBuilder);
+          }
+
+          this.startJsStringBuilder = new StringBuilder();
+          this.endJsStringBuilder = new StringBuilder();
+
         }
-        this.startJsStringBuilder = new StringBuilder();
-        this.endJsStringBuilder = new StringBuilder();
+
       }
 
     }
